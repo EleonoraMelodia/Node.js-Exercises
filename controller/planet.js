@@ -20,14 +20,8 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var express = require("express");
-var asyncErrors = require("express-async-errors");
+exports.deleteById = exports.updateById = exports.create = exports.getOneById = exports.getAll = void 0;
 var Joi = require("joi");
-var morgan = require("morgan");
-var app = express();
-var port = 3000;
-app.use(express.json());
-app.use(morgan("dev"));
 var planets = [
     {
         id: 1,
@@ -38,19 +32,21 @@ var planets = [
         name: "Mars",
     },
 ];
-app.get("/api/planets", function (req, res) {
-    res.status(200).json(planets);
-});
-app.get("/api/planets/:id", function (req, res) {
-    var id = req.params.id;
-    var getAPlanet = planets.find(function (p) { return p.id === Number(id); });
-    res.status(200).json(getAPlanet);
-});
 var planetSchema = Joi.object({
     id: Joi.number().integer().required(),
     name: Joi.string().required(),
 });
-app.post("/api/planets", function (req, res) {
+var getAll = function (req, res) {
+    res.status(200).json(planets);
+};
+exports.getAll = getAll;
+var getOneById = function (req, res) {
+    var id = req.params.id;
+    var getAPlanet = planets.find(function (p) { return p.id === Number(id); });
+    res.status(200).json(getAPlanet);
+};
+exports.getOneById = getOneById;
+var create = function (req, res) {
     var _a = req.body, id = _a.id, name = _a.name;
     var newPlanet = { id: id, name: name };
     var validationNewPlanet = planetSchema.validate(newPlanet);
@@ -63,28 +59,26 @@ app.post("/api/planets", function (req, res) {
         planets = __spreadArray(__spreadArray([], planets, true), [newPlanet], false);
         res.status(201).json({ msg: "New planet created!" });
     }
-});
-app.put("/api/planets/:id", function (req, res) {
+};
+exports.create = create;
+var updateById = function (req, res) {
     var id = req.params.id;
     var name = req.body.name;
     var validationUpdate = planetSchema.validate({ id: Number(id), name: name });
     if (validationUpdate.error) {
-        return res.status(400).json({ msg: validationUpdate.error.details[0].message });
+        return res
+            .status(400)
+            .json({ msg: validationUpdate.error.details[0].message });
     }
     else {
         planets = planets.map(function (p) { return (p.id === Number(id) ? __assign(__assign({}, p), { name: name }) : p); });
         res.status(200).json(planets);
     }
-});
-app.delete("/api/planets/:id", function (req, res) {
+};
+exports.updateById = updateById;
+var deleteById = function (req, res) {
     var id = req.params.id;
     planets = planets.filter(function (p) { return p.id !== Number(id); });
     res.status(200).json({ msg: "planet deleted!" });
-});
-app.use(function (err, req, res, next) {
-    console.error(err.stack);
-    res.status(500).send("something went wrong...");
-});
-app.listen(port, function () {
-    console.log("server listening on port ".concat(port));
-});
+};
+exports.deleteById = deleteById;
