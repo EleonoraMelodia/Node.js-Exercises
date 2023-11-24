@@ -62,11 +62,19 @@ app.post("/api/planets", (req: Request, res:Response) => {
   }
 });
 
+
 app.put("/api/planets/:id", (req: Request, res:Response) => {
   const { id } = req.params;
   const { name } = req.body;
-  planets = planets.map((p) => (p.id === Number(id) ? { ...p, name } : p));
+ const validationUpdate = planetSchema.validate({ id: Number(id), name });
+
+  if (validationUpdate.error) {
+    return res.status(400).json({ msg: validationUpdate.error.details[0].message });
+  } else {
+   planets = planets.map((p) => (p.id === Number(id) ? { ...p, name } : p));
   res.status(200).json(planets);
+  }
+
 });
 
 app.delete("/api/planets/:id", (req: Request, res:Response) => {

@@ -67,8 +67,14 @@ app.post("/api/planets", function (req, res) {
 app.put("/api/planets/:id", function (req, res) {
     var id = req.params.id;
     var name = req.body.name;
-    planets = planets.map(function (p) { return (p.id === Number(id) ? __assign(__assign({}, p), { name: name }) : p); });
-    res.status(200).json(planets);
+    var validationUpdate = planetSchema.validate({ id: Number(id), name: name });
+    if (validationUpdate.error) {
+        return res.status(400).json({ msg: validationUpdate.error.details[0].message });
+    }
+    else {
+        planets = planets.map(function (p) { return (p.id === Number(id) ? __assign(__assign({}, p), { name: name }) : p); });
+        res.status(200).json(planets);
+    }
 });
 app.delete("/api/planets/:id", function (req, res) {
     var id = req.params.id;
