@@ -21,11 +21,11 @@ app.put("/api/planets/:id", planetController.updateById);
 
 app.delete("/api/planets/:id", planetController.deleteById);
 
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send("something went wrong...");
 });
-
 app.listen(port, () => {
   console.log(`server listening on port ${port}`);
 });
