@@ -1,12 +1,15 @@
-const pgPromise = require("pg-promise");
-const Joi = require("joi");
+import { Request, Response } from 'express';
+import pgPromise from 'pg-promise';
+import Joi from 'joi';
+
 const db = pgPromise()("postgres://postgres:postgres@localhost:5432/planets");
 
 const setupDb = async () => {
   await db.none(`DROP TABLE IF EXISTS planets;
 CREATE TABLE planets(
     id SERIAL NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    image TEXT
 );`);
 
   await db.none(`INSERT INTO planets (name) VALUES ('Earth')`);
@@ -19,19 +22,18 @@ CREATE TABLE planets(
 
 setupDb();
 
-const getAll = async (req, res) => {
-  const { id } = req.params;
+const getAll = async (req: Request, res: Response) => {
   const planets = await db.many(`SELECT * FROM planets`);
   res.status(200).json(planets);
 };
 
-const getOneById = async (req, res) => {
+const getOneById = async (req: Request, res: Response) => {
   const { id } = req.params;
   const planets = await db.oneOrNone(
     `SELECT * FROM planets WHERE id=$1;`,
     Number(id)
   );
-  const planet = planets.find((p) => p.id === Number(id));
+  const planet = planets?.find((p: any) => p.id === Number(id));
   res.status(200).json(planet);
 };
 
@@ -40,7 +42,7 @@ const planetSchema = Joi.object({
   name: Joi.string().required(),
 });
 
-const create = async (req, res) => {
+const create = async (req: Request, res: Response) => {
   const { id, name } = req.body;
   const newPlanet = { id, name };
   const validationPlanet = planetSchema.validate(newPlanet);
@@ -55,7 +57,24 @@ const create = async (req, res) => {
   }
 };
 
-const updateById = async (req, res) => {
+const createImg = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const fileName = (req.file as any)?.path;
+
+  try {
+    if (fileName) {
+      await db.none(`UPDATE planets SET image=$1 WHERE id=$2`, [fileName, id]);
+      res.status(200).json({ msg: "Image uploaded and linked to planet!" });
+    } else {
+      res.status(400).send("An error occurred with the upload of your file");
+    }
+  } catch (error) {
+    console.error("Error updating image:", error.message);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
+
+const updateById = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
 
@@ -68,10 +87,16 @@ const updateById = async (req, res) => {
   }
 };
 
-
-const deleteAPlanet = async (req, res) => {
+const deleteAPlanet = async (req: Request, res: Response) => {
   const { id } = req.params;
   await db.none(`DELETE FROM planets WHERE id=$1`, Number(id));
 };
 
-module.exports = { getAll, getOneById, create, updateById, deleteAPlanet };
+export {
+  getAll,
+  getOneById,
+  create,
+  createImg,
+  updateById,
+  deleteAPlanet,
+};
