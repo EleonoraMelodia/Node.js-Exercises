@@ -10,7 +10,8 @@ import {
   deleteAPlanet,
 } from './controllers/planets'
   
-import {login, signUp} from './controllers/users'
+import {login, signUp, logOut} from './controllers/users'
+import  authorize  from './authorize';
 
 const port = 3000;
 const app = express();
@@ -33,8 +34,8 @@ app.post('/api/planets', create);
 app.post('/api/planets/:id/image', upload.single('image'), createImg);
 //CRUD for users db
 app.post('/api/users/login', login);
-
 app.post('/api/users/signup', signUp);
+app.get('/api/users/logout', authorize, logOut);
 
 app.patch('/api/planets/:id', updateById);
 app.delete('/api/planets/:id', deleteAPlanet);
