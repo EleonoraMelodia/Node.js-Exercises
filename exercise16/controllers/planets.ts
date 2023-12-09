@@ -1,26 +1,6 @@
 import { Request, Response } from 'express';
-import pgPromise from 'pg-promise';
 import Joi from 'joi';
-
-const db = pgPromise()("postgres://postgres:postgres@localhost:5432/planets");
-
-const setupDb = async () => {
-  await db.none(`DROP TABLE IF EXISTS planets;
-CREATE TABLE planets(
-    id SERIAL NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL,
-    image TEXT
-);`);
-
-  await db.none(`INSERT INTO planets (name) VALUES ('Earth')`);
-  await db.none(`INSERT INTO planets (name) VALUES ('Mars')`);
-  await db.none(`INSERT INTO planets (name) VALUES ('Jupiter')`);
-
-  const planets = await db.many(`SELECT * FROM planets`);
-  console.log(planets);
-};
-
-setupDb();
+import {db} from '../db'
 
 const getAll = async (req: Request, res: Response) => {
   const planets = await db.many(`SELECT * FROM planets`);
@@ -38,9 +18,9 @@ const getOneById = async (req: Request, res: Response) => {
 };
 
 const planetSchema = Joi.object({
-  id: Joi.number().integer().required(),
   name: Joi.string().required(),
 });
+
 
 const create = async (req: Request, res: Response) => {
   const { id, name } = req.body;
@@ -88,9 +68,16 @@ const updateById = async (req: Request, res: Response) => {
 };
 
 const deleteAPlanet = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  await db.none(`DELETE FROM planets WHERE id=$1`, Number(id));
+  try {
+    const { id } = req.params;
+    await db.none(`DELETE FROM planets WHERE id=$1`, Number(id));
+    res.status(200).json({ msg: "Planet deleted!" });
+  } catch (error) {
+    console.error("Error deleting planet:", error.message);
+    res.status(500).json({ msg: "Internal server error" });
+  }
 };
+
 
 export {
   getAll,

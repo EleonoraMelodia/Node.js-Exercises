@@ -1,7 +1,16 @@
 import express, { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 
-const planetsController = require('./controller/planets');
+import {
+  getAll,
+  getOneById,
+  create,
+  createImg,
+  updateById,
+  deleteAPlanet,
+} from './controllers/planets'
+  
+import {login} from './controllers/users'
 
 const port = 3000;
 const app = express();
@@ -18,12 +27,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-app.get('/api/planets', planetsController.getAll);
-app.get('/api/planets/:id', planetsController.getOneById);
-app.post('/api/planets', planetsController.create);
-app.post('/api/planets/:id/image', upload.single('image'), planetsController.createImg);
-app.patch('/api/planets/:id', planetsController.updateById);
-app.delete('/api/planets/:id', planetsController.deleteAPlanet);
+app.get('/api/planets', getAll);
+app.get('/api/planets/:id', getOneById);
+app.post('/api/planets', create);
+app.post('/api/planets/:id/image', upload.single('image'), createImg);
+//CRUD for users db
+app.post('/api/users/login', login);
+
+app.patch('/api/planets/:id', updateById);
+app.delete('/api/planets/:id', deleteAPlanet);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
@@ -33,3 +45,4 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+
